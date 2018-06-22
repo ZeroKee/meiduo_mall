@@ -45,6 +45,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'django_redis',
+    'corsheaders',
+    'celery',
 
     # 注册子应用
     'users.apps.UsersConfig',
@@ -52,6 +54,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # 允许跨域请求
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -203,4 +208,13 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
 }
 
+# 修改默认加载的User模块
 AUTH_USER_MODEL = 'users.User'
+
+# CORS跨域请求白名单
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    'localhost:8080',
+    'www.meiduo.site:8080'
+)
+CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie

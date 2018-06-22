@@ -10,10 +10,12 @@ from rest_framework import status
 # 自己定义的模块
 from . import serializers
 from . import constants
+from celery_tasks.sms.tasks import send_sms_code
+
 
 # 第三方包
 from meiduo_mall.libs.captcha.captcha import captcha
-from meiduo_mall.libs.yuntongxun.sms import CCP
+# from meiduo_mall.libs.yuntongxun.sms import CCP
 
 class ImageCodeView(APIView):
     def get(self, request, image_code_id):
@@ -48,14 +50,17 @@ class SmsCodeView(GenericAPIView):
         pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
         pl.execute()
 
-        # 发送短信验证码, 功能已实现，生产环境可使用
+        # # 发送短信验证码, 功能已实现，生产环境可使用
         # ccp = CCP()
         # interval = constants.SEND_SMS_CODE_INTERVAL/60
         # # 注意： 测试的短信模板编号为1
-        # ccp.send_template_sms(mobile, [sms_code, interval], constants.SMS_TEMPLATE_CODE)
+        # ccp.send_template_sms(mobile, [sms_code, interval], constants.SMS_TEMP_ID)
 
-        # 调试环境使用一下代码
-        print(sms_code)
+        # 调用celery_tasks中任务模块中的任务代码
+        # send_sms_code.delay(mobile, sms_code)
+        print('*'*20,'短信验证码', sms_code)
 
         # 返回响应状态
         return Response({"message": "OK"}, status.HTTP_200_OK)
+
+
