@@ -42,8 +42,10 @@ class ImageCodeSerializer(serializers.Serializer):
 
         # 验证有没有在60s内给该手机号发送短信
         # 利用序列化器中封装的上下文对象来获取视图中的参数
-        mobile = self.context['view'].kwargs['mobile']
-        is_send = redis_conn.get('send_flag_%s' % mobile)
+        mobile = self.context['view'].kwargs.get('mobile')
+        is_send = ''
+        if mobile:
+            is_send = redis_conn.get('send_flag_%s' % mobile)
 
         if is_send:
             raise serializers.ValidationError('短信发送过于频繁')

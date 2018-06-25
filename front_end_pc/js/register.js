@@ -1,6 +1,7 @@
 var vm = new Vue({
 	el: '#app',
 	data: {
+		host,
 		error_name: false,
 		error_password: false,
 		error_check_password: false,
@@ -17,8 +18,7 @@ var vm = new Vue({
 		sms_code: '',
 		allow: false,
 		image_code_id:'',
-		image_code_url:'http:127.0.0.1:8000/image_code/70d92016-47d8-4634-8fb2-cb5391a6ff7d/',
-		host:'http://127.0.0.1:8000',
+		image_code_url:'',
 		sending_flag:false,
 		sms_code_tip:'获取短信验证码',
 		error_image_code_message:'请填写图片验证码',
@@ -162,7 +162,11 @@ var vm = new Vue({
 				})
 					.then(response=>{
 						// 登陆状态保持
-
+						localStorage.clear();
+						sessionStorage.clear();
+						localStorage.username = response.data.username;
+						localStorage.user_id = response.data.id;
+						localStorage.token = response.data.token;
 						// 跳转到首页
 						location.href='/'
 					})

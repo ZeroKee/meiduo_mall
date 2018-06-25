@@ -17,6 +17,7 @@ from celery_tasks.sms.tasks import send_sms_code
 from meiduo_mall.libs.captcha.captcha import captcha
 # from meiduo_mall.libs.yuntongxun.sms import CCP
 
+
 class ImageCodeView(APIView):
     def get(self, request, image_code_id):
         # 1.生成图片验证码

@@ -6,6 +6,7 @@ from rest_framework import serializers
 import re
 from django.core.exceptions import ValidationError
 from django_redis import get_redis_connection
+from rest_framework_jwt.settings import api_settings
 
 from .models import User
 
@@ -14,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(label='确认密码', required=True, allow_null=False, allow_blank=False, write_only=True)
     sms_code = serializers.CharField(label='短信验证码', required=True, allow_blank=False, allow_null=False, write_only=True)
     allow = serializers.CharField(label='同意协议', required=True, allow_blank=False, allow_null=False, write_only=True)
+    token = serializers.CharField(label='登陆状态token', read_only=True)
 
     def validate_mobile(self, value):
         """验证手机号"""
@@ -56,7 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     # 创建新用户
     def create(self, validated_data):
-        # 删除不需要保存的字段
+        # 删除不需要保存的字段,模型类中不存在的数据
         del validated_data['password2']
         del validated_data['sms_code']
         del validated_data['allow']
@@ -64,15 +66,26 @@ class UserSerializer(serializers.ModelSerializer):
         # 创建新用户
         user = super().create(validated_data)
         # user = User.objects.create(**validated_data)
+
         # 认证密码
         user.set_password(validated_data['password'])
         user.save()
+
+        # 生成token，并保存在user对象中
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        # 生成载荷
+        payload = jwt_payload_handler(user)
+        # 生成token
+        token = jwt_encode_handler(payload)
+        user.token = token
         return user
 
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'mobile',
-                 'sms_code', 'allow', 'password2')
+                 'sms_code', 'allow', 'password2', 'token')
         # 添加字段约束
         extra_kwargs = {
             'id': {'read_only': True},
