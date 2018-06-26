@@ -9,6 +9,7 @@ from django_redis import get_redis_connection
 from rest_framework_jwt.settings import api_settings
 
 from .models import User
+from .utils import get_user_by_account
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -85,7 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'mobile',
-                 'sms_code', 'allow', 'password2', 'token')
+                  'sms_code', 'allow', 'password2', 'token')
         # 添加字段约束
         extra_kwargs = {
             'id': {'read_only': True},
@@ -96,7 +97,7 @@ class UserSerializer(serializers.ModelSerializer):
                              'min_length': '用户名长度为5-20位',
                              'max_length': '用户名长度为5-20位'
                          }
-            },
+                         },
             'password': {'required': True,
                          'write_only': True,
                          'max_length': 20,
@@ -104,7 +105,83 @@ class UserSerializer(serializers.ModelSerializer):
                          'error_messages': {
                              'min_length': '用户密码长度为8-20位',
                              'max_length': '用户密码长度为8-20位',
-                        }
-            },
+                         }
+                         },
 
+        }
+
+
+# 验证短信验证码
+class CheckSMSCodeSerializer(serializers.Serializer):
+    sms_code = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+
+    # 验证账户名和短信验证码
+    def validate_sms_code(self, value):
+        sms_code = value
+        # 验证账户
+        account = self.context['view'].kwargs['account']
+        user = get_user_by_account(account)
+
+        if user is None:
+            raise ValidationError('用户名或手机号错误')
+
+        # 验证短信验证码
+        mobile = user.mobile
+        redis_conn = get_redis_connection('verify_codes')
+        # redis中查询到的数据是bytes类型，需要转码
+        real_sms_code = redis_conn.get('sms_%s' % mobile).decode()
+        print(real_sms_code)
+        if real_sms_code is None:
+            # print('短信验证码无效')
+            raise ValidationError('无效的短信验证码')
+        if real_sms_code != sms_code:
+            # print('短信验证码错误')
+            raise ValidationError('短信验证码错误')
+
+        self.user = user
+
+        return value
+
+
+# 验证重置密码所需要的access_token，验证确认密码，并修改密码
+class CheckPasswordTokenSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(label='确认密码', required=True, write_only=True)
+    access_token = serializers.CharField(label='重置密码所需的access_token', required=True, write_only=True)
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        password2 = attrs.get('password2')
+        access_token = attrs.get('access_token')
+
+        if password != password2:
+            raise ValidationError('两次密码不一致')
+
+        user_id = self.context['view'].kwargs.get('pk')
+
+        # 验证access_token中的user_id与url中的pk是否相等
+        is_true = User.check_password_token(access_token, user_id)
+        if not is_true:
+            raise ValidationError('无效的access_token')
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        # 设置密码
+        instance.set_password(validated_data.get('password'))
+        instance.save()
+        return instance
+
+    class Meta:
+        model = User
+        fields = ['id', 'password', 'password2', 'access_token']
+        extral_kwargs = {
+            'password': {
+                'write_only': True,
+                'min_length': 8,
+                'max_length': 20,
+                'error_messages': {
+                    'min': '密码位数为8-20',
+                    'max': '密码位数为8-20'
+                }
+            }
         }

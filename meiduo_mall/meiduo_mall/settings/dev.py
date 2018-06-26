@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     # 注册子应用
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
+    'oauths.apps.OauthsConfig',
 ]
 
 MIDDLEWARE = [
@@ -228,7 +229,7 @@ JWT_AUTH = {
 }
 
 # 注册自定义后端认证类
-AUTHENTICATION_BACKENDS	=	['users.utils.UsernameMobileAuthBackend',
+AUTHENTICATION_BACKENDS	= ['users.utils.UsernameMobileAuthBackend',
 ]
 
 # 修改默认加载的User模块
@@ -242,3 +243,8 @@ CORS_ORIGIN_WHITELIST = (
     'api.meiduo.site:8000'
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+# QQ登陆相关配置
+QQ_APP_ID  = "101486400"
+QQ_APP_KEY = "c26856e06800e66e548af586685796cb"
+QQ_REDIRECT_URI = "http://www.meiduo.site:8080/oauth_callback.html"

@@ -11,5 +11,7 @@ urlpatterns = [
     url(r'^mobile/(?P<mobile>1[3-9]\d{9})/count/$', views.MobileCountView.as_view()),
     url(r'^users/$', views.UserRegisterView.as_view()),
     url(r'^authorizations/$', obtain_jwt_token, name='authorizations'),
-    url(r'^accounts/(?P<account>\w{5,20})/sms/token/$', views.SMScodeTokenView.as_view()),
+    url(r'^accounts/(?P<account>\w{5,20})/sms/token/$', views.SMScodeTokenView.as_view()),  # 返回发送短信验证码所需的access_token
+    url(r'^accounts/(?P<account>\w{5,20})/password/token/$', views.PasswordTokenView.as_view()),
+    url(r'^users/(?P<pk>\d+)/password/$', views.PasswordView.as_view())
 ]

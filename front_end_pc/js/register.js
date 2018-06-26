@@ -185,7 +185,7 @@ var vm = new Vue({
 			if (this.sending_flag==true){
 				return;
 			}
-			sending_flag = true;
+			this.sending_flag = true;
 			// 校验验证码和手机号是否为空
 			this.check_image_code();
 			this.check_phone();

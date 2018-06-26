@@ -5,8 +5,11 @@
 from redis.exceptions import RedisError
 from rest_framework import serializers
 from django_redis import get_redis_connection
+from rest_framework.exceptions import ValidationError
 
 import logging
+from users.models import User
+from users.utils import get_user_by_account
 
 # 获取在配置文件中定义的logger，用来记录日志
 logger = logging.getLogger('meiduo')
@@ -52,3 +55,29 @@ class ImageCodeSerializer(serializers.Serializer):
 
         # 返回attrs
         return attrs
+
+
+class CheckAccessTokenForSMSSerializer(serializers.Serializer):
+    access_token = serializers.CharField(label='发送短信所需要的access_token', required=True, allow_null=False)
+
+    def validate_access_token(self, value):
+        # 从access_token中拿到mobile
+        access_token = value
+        mobile = User.check_sms_code_token(access_token)
+
+        user = get_user_by_account(mobile)
+        if user is None:
+            raise ValidationError('无效的access_token')
+
+        # 60秒内只发送异常短信验证码
+        redis_conn = get_redis_connection('verify_codes')
+        is_send = redis_conn.get('send_flag_%s' % mobile)
+        if is_send:
+            raise serializers.ValidationError('短信发送过于频繁')
+
+        # 定义mobile属性来保存电话号码
+        self.mobile = mobile
+
+        return value
+
+

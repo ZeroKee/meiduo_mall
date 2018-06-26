@@ -65,3 +65,31 @@ class SmsCodeView(GenericAPIView):
         return Response({"message": "OK"}, status.HTTP_200_OK)
 
 
+# 验证access_token发送短信
+class SMSCodeByTokenView(GenericAPIView):
+    serializer_class = serializers.CheckAccessTokenForSMSSerializer
+
+    def get(self, request):
+        # 验证access_token并且60秒内未发送过短信
+        serializer = self.get_serializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        mobile = serializer.mobile
+        # 生成短信验证码
+        sms_code = '%06d' % random.randint(0, 999999)
+
+        # 保存短信验证码,和发送短信标示
+        redis_conn = get_redis_connection("verify_codes")
+        pl = redis_conn.pipeline()  # 获取管道对象，类似与mysql中的事务处理translate,将两次数据库合成一次，提高性能
+        pl.multi()
+        pl.setex("sms_%s" % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        pl.setex("send_flag_%s" % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        pl.execute()
+
+        # 调用celery_tasks中任务模块中的任务代码,发送短信
+        # send_sms_code.delay(mobile, sms_code)
+        print(sms_code)
+        # 返回200 ok
+        return Response(data={'message':'ok'}, status=status.HTTP_200_OK)
+
+
