@@ -166,10 +166,15 @@ class CheckPasswordTokenSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
-        # 设置密码
-        instance.set_password(validated_data.get('password'))
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
+
+    # def update(self, instance, validated_data):
+    #     # 设置密码
+    #     instance.set_password(validated_data.get('password'))
+    #     instance.save()
+    #     return instance
+    #
+
 
     class Meta:
         model = User

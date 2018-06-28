@@ -195,7 +195,7 @@ var vm = new Vue({
 				return;
 			}
 			// 发送请求
-			axios.get(this.host + '/sms_code/'+ this.mobile + '/count/',
+			axios.get(this.host + '/sms_code/'+ this.mobile + '/',
 				{
 					params:{  // 查询参数，也可以写在地址中
 						image_code:this.image_code,
