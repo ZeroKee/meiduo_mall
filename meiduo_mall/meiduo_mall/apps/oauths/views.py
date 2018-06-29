@@ -11,7 +11,7 @@ from .exceptions import QQAPIError
 from .serializers import OAuthQQUserSerializer
 
 
-# Create your views here.
+# GET: /oauth/qq/authorization/?code=xxx
 class OAuthQQUrlView(APIView):
     """生成QQ登陆的url地址"""
 
@@ -26,6 +26,7 @@ class OAuthQQUrlView(APIView):
         return Response({"auth_url": url})
 
 
+# /oauth/user/qq/
 class QQUserOAuthView(GenericAPIView):
     serializer_class = OAuthQQUserSerializer
 

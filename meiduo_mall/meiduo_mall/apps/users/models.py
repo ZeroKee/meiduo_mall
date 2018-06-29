@@ -9,6 +9,7 @@ from . import constants
 class User(AbstractUser):
     """用户模型类"""
     mobile = models.CharField(max_length=11, unique=True, verbose_name='手机号')
+    email_active = models.BooleanField(verbose_name='邮箱验证状态', default=False)
 
     class Meta:
         db_table = 'tb_users'
@@ -46,6 +47,7 @@ class User(AbstractUser):
 
     @staticmethod
     def check_password_token(access_token, user_id):
+        """验证重置密码所需要的access_token"""
         serializer = TJWSerializer(settings.SECRET_KEY, constants.SMS_CODE_TOKEN_EXPIRES)
         # serializer.loads(数据), 返回字典类型
         try:
@@ -57,3 +59,31 @@ class User(AbstractUser):
                 return True
             else:
                 return False
+
+    def generate_verify_email_url(self):
+        """通过id, email生成access_token，拼接验证邮箱的地址"""
+        serializer = TJWSerializer(settings.SECRET_KEY, constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+        data = {'email':self.email, 'user_id':self.id}
+        token = serializer.dumps(data)
+        # 把bytes转成字符串
+        token = token.decode()
+        # 拼接验证地址
+        verify_url = 'http://www.meiduo.site:8080/success_verify_email.html?token=' + token
+        return verify_url
+
+    @staticmethod
+    def verify_email_token(access_token):
+        serializer = TJWSerializer(settings.SECRET_KEY, constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+        try:
+            data = serializer.loads(access_token)
+        except BadData:
+            return None
+        else:
+            email = data.get('email')
+            user_id = data.get('user_id')
+            try:
+                user = User.objects.get(id=user_id, email=email)
+            except User.DoesNotExist:
+                return None
+            else:
+                return user

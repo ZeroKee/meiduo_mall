@@ -248,3 +248,14 @@ CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
 QQ_APP_ID  = "101486400"
 QQ_APP_KEY = "c26856e06800e66e548af586685796cb"
 QQ_REDIRECT_URI = "http://www.meiduo.site:8080/oauth_callback.html"
+
+# 发送邮件验证邮箱
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = '15768856976@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'python123'
+#收件人看到的发件人
+EMAIL_FROM = '美多商城<15768856976@163.com>'

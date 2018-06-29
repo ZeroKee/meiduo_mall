@@ -65,4 +65,4 @@ class OAuthQQUserSerializer(serializers.Serializer):
             user=user,
             openid=validated_data['openid']
         )
-        return user
+        return user  # 当调用serializer.save()时，会调用序列化器的create，update等方法，所以可以通过返回user的方式将user传到视图中

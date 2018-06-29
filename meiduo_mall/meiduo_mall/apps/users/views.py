@@ -3,12 +3,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from django_redis import get_redis_connection
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework import status
 import re
 from rest_framework import mixins
+from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, CheckSMSCodeSerializer, CheckPasswordTokenSerializer
+from .serializers import UserSerializer, CheckSMSCodeSerializer, CheckPasswordTokenSerializer, UserDetailSerializer, \
+    EmailSerializer
 from verifications.serializers import ImageCodeSerializer
 from .utils import get_user_by_account
 from .models import User
@@ -84,6 +86,7 @@ class PasswordTokenView(GenericAPIView):
 
 
 # 验证access_token并且重置密码
+# POST: /users/(?P<pk>\d+)/password/
 class PasswordView(mixins.UpdateModelMixin, GenericAPIView):
     queryset = User.objects.all()
     serializer_class = CheckPasswordTokenSerializer
@@ -92,4 +95,45 @@ class PasswordView(mixins.UpdateModelMixin, GenericAPIView):
         return self.update(request, pk)
 
 
+# 用户登陆认证并返回用户详情
+# GET: /user/
+class UserDetailView(RetrieveAPIView):
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_object(self):  # 返回详情视图所需要的模型类对象
+        return self.request.user
+
+
+# 保存邮箱地址并发送邮件
+# GET: /emails/
+class EmailView(UpdateAPIView):
+    serializer_class = EmailSerializer
+    # 用户登陆权限认证后，方可验证并保存邮箱
+    permission_classes = [IsAuthenticated]
+
+    # 重写get_object方法获取操作对象user,然后传给序列化器的instance
+    # request.user获取到的是通过认证全线后的user可以看着jwt_token的载荷user
+    def get_object(self):
+        return self.request.user
+
+
+# 验证邮箱
+# GET: /emails/verifications/
+class VerifyEmailView(APIView):
+    def get(self, request):
+
+        # 从查询字符串中拿到access_token
+        access_token = request.query_params.get('token')
+        if not access_token:
+            return Response({'message': '缺少access_token邮箱验证失败'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 从access_token中获取user
+        user = User.verify_email_token(access_token)
+        if user is None:
+            return Response({'message': '无效的access_token邮箱验证失败'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 修改user的email_active 状态
+        user.email_active = True
+        user.save()
+        return Response({'message': '邮箱验证成功'})

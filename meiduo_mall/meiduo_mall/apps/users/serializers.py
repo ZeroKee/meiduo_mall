@@ -10,6 +10,7 @@ from rest_framework_jwt.settings import api_settings
 
 from .models import User
 from .utils import get_user_by_account
+from celery_tasks.email.tasks import send_verify_email
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -190,3 +191,31 @@ class CheckPasswordTokenSerializer(serializers.ModelSerializer):
                 }
             }
         }
+
+
+# 通过序列化器来返回数据
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'mobile', 'email', 'email_active']
+
+
+# 邮箱验证并保存
+class EmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email']  # 因为默认的邮箱状态为False ,所以不需要验证
+        extral_kwargs = {
+            'email': {'required': True}
+        }
+
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email')
+        instance.save()
+
+        # 生成验证邮箱的地址,将access_token放在查询字符串中
+        verify_url = instance.generate_verify_email_url()
+        # 使用celery发送邮件
+        send_verify_email.delay(instance.email, verify_url)
+
+        return instance
