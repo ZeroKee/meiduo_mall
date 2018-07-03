@@ -3,33 +3,41 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 	<title>美多商城-用户中心</title>
-	<link rel="stylesheet" type="text/css" href="css/reset.css">
-	<link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script type="text/javascript" src="js/hosts.js"></script>
+    <script type="text/javascript" src="js/vue-2.5.16.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.min.js"></script>
+    <script>
+        var user_id = sessionStorage.user_id || localStorage.user_id;
+        var token = sessionStorage.token || localStorage.token;
+        if (!(user_id && token)) {
+            location.href = '/login.html?next=/user_center_info.html';
+        }
+    </script>
 </head>
-<body>
-	<div class="header_con">
-		<div class="header">
-			<div class="welcome fl">欢迎来到美多商城!</div>
-			<div class="fr">
-				<div class="login_info fl">
-					欢迎您：<em>张 山</em>
-				</div>
-				<div class="login_btn fl">
-					<a href="login.html">登录</a>
-					<span>|</span>
-					<a href="register.html">注册</a>
-				</div>
-				<div class="user_link fl">
-					<span>|</span>
-					<a href="user_center_info.html">用户中心</a>
-					<span>|</span>
-					<a href="cart.html">我的购物车</a>
-					<span>|</span>
-					<a href="user_center_order.html">我的订单</a>
-				</div>
-			</div>
-		</div>		
-	</div>
+
+    <div id="app" v-cloak>
+    <div class="header_con">
+        <div class="header">
+            <div class="welcome fl">欢迎来到美多商城!</div>
+            <div class="fr">
+                <div class="login_btn fl">
+                    欢迎您：<em>{{ username }}</em>
+                    <span>|</span>
+                    <a @click="logout">退出</a>
+                </div>
+                <div class="user_link fl">
+                    <span>|</span>
+                    <a href="user_center_info.html">用户中心</a>
+                    <span>|</span>
+                    <a href="cart.html">我的购物车</a>
+                    <span>|</span>
+                    <a href="user_center_order.html">我的订单</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
 	<div class="search_bar clearfix">
 		<a href="index.html" class="logo fl"><img src="images/logo.png"></a>
@@ -54,20 +62,23 @@
 				<div class="info_con clearfix">
 				<h3 class="common_title2">修改密码</h3>
 				<div class="site_con pass_change_con">			
-                    <form>
+                    <form @submit.prevent="on_submit" >
                         <div class="form_group">
                             <label>当前密码：</label>
-                            <input type="password" name="">
+                            <input type="password" name="" v-model="now_password">
+                            <span class="error" v-show="error_now_password">{{ error_now_password_msg }}</span>
                         </div>
                         <div class="form_group">
                             <label>新密码：</label>
-                            <input type="password" name="">
+                            <input type="password" name="" v-model="password">
+                            <span class="error" v-show="error_password">{{ error_password_msg }}</span>
                         </div>
                         <div class="form_group">
                             <label>确认新密码：</label>
-                            <input type="password" name="">
+                            <input type="password" name="" v-model="password2">
+                            <span class="error" v-show="error_check_password">{{ error_check_password_msg }}</span>
                         </div>
-                        <input type="button" name="" value="确 定" class="info_submit">
+                        <input type="submit" name="" value="确 定" class="info_submit">
                     </form>
             </div>
 				</div>
@@ -75,6 +86,7 @@
 		</div>
 		</div>
 	</div>
+
 
 
 
@@ -91,6 +103,6 @@
 		<p>CopyRight © 2016 北京美多商业股份有限公司 All Rights Reserved</p>
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
-	
+<script type="text/javascript" src="js/user_center_pass.js"></script>
 </body>
 </html>

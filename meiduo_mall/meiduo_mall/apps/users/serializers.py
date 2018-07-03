@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django_redis import get_redis_connection
 from rest_framework_jwt.settings import api_settings
 
-from .models import User
+from .models import User, Address
 from .utils import get_user_by_account
 from celery_tasks.email.tasks import send_verify_email
 
@@ -169,17 +169,50 @@ class CheckPasswordTokenSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
 
-    # def update(self, instance, validated_data):
-    #     # 设置密码
-    #     instance.set_password(validated_data.get('password'))
-    #     instance.save()
-    #     return instance
-    #
-
-
     class Meta:
         model = User
         fields = ['id', 'password', 'password2', 'access_token']
+        extral_kwargs = {
+            'password': {
+                'write_only': True,
+                'min_length': 8,
+                'max_length': 20,
+                'error_messages': {
+                    'min': '密码位数为8-20',
+                    'max': '密码位数为8-20'
+                }
+            }
+        }
+
+
+# 修改密码
+class CheckPasswordSerializer(serializers.ModelSerializer):
+    now_password = serializers.CharField(label='旧密码', required=True, write_only=True)
+    password2 = serializers.CharField(label='确认密码', required=True, write_only=True)
+
+    def validate(self, attrs):
+        now_password = attrs.get('now_password')
+        password2 = attrs.get('password2')
+        password = attrs.get('password')
+
+        # 验证两次密码是否一致
+        if password != password2:
+            raise ValidationError('两次密码不一致')
+
+        # 验证旧密码 当创建序列化器时就会讲对象传递给instance
+        if not self.instance.check_password(now_password):
+            raise ValidationError('旧密码错误')
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
+
+    class Meta:
+        model = User
+        fields = ['id', 'password', 'password2', 'now_password']
         extral_kwargs = {
             'password': {
                 'write_only': True,
@@ -219,3 +252,38 @@ class EmailSerializer(serializers.ModelSerializer):
         send_verify_email.delay(instance.email, verify_url)
 
         return instance
+
+
+# 收货地址
+class AddressSerializer(serializers.ModelSerializer):
+    # StringRelatedField序列化时会返回关联字段的__str__方法的返回值
+    province = serializers.StringRelatedField(read_only=True)
+    city = serializers.StringRelatedField(read_only=True)
+    district = serializers.StringRelatedField(read_only=True)
+    province_id = serializers.IntegerField(label='省ID', required=True)
+    city_id = serializers.IntegerField(label='市ID', required=True)
+    district_id = serializers.IntegerField(label='区ID', required=True)
+    mobile = serializers.RegexField(label='手机号', regex=r'^1[3-9]\d{9}$')
+
+    class Meta:
+        model = Address
+        exclude = ('user', 'create_time', 'update_time', 'is_deleted')
+
+    def create(self, validated_data):
+        """将收货地址和user关联起来"""
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+# 地址标题
+class AddressesTitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Address
+        fields = ['id','title']
+
+
+
+
+
+

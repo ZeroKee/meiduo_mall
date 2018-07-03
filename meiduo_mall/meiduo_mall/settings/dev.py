@@ -49,15 +49,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # DRF框架
     'rest_framework',
+    # redis数据库
     'django_redis',
+    # CORS跨域
     'corsheaders',
+    # celery异步服务
     'celery',
 
     # 注册子应用
+    # 用户
     'users.apps.UsersConfig',
+    # 短信验证图片验证
     'verifications.apps.VerificationsConfig',
+    # 第三方登陆验证
     'oauths.apps.OauthsConfig',
+    # 区域划分
+    'areas.apps.AreasConfig',
 ]
 
 MIDDLEWARE = [
@@ -152,7 +161,7 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
-    # 用于缓存后天用户的信息
+    # 用于缓存后台用户的信息
     "session": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
@@ -213,8 +222,9 @@ LOGGING = {
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
-    # 默认的认证机制
+    # 权限认证机制
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        # JWT登陆认证
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
@@ -259,3 +269,12 @@ EMAIL_HOST_USER = '15768856976@163.com'
 EMAIL_HOST_PASSWORD = 'python123'
 #收件人看到的发件人
 EMAIL_FROM = '美多商城<15768856976@163.com>'
+
+# 缓存行政区划
+# DRF扩展
+REST_FRAMEWORK_EXTENSIONS = {
+    # 缓存时间
+    'DEFAULT_CACHE_RESPONSE_TIMEOUT': 60 * 60*24,
+    # 缓存存储
+    'DEFAULT_USE_CACHE': 'default',
+}
