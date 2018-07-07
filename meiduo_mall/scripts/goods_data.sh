@@ -1,0 +1,1 @@
+mysql -uroot -p meiduo_mall < ./scripts/goods_data.sql

@@ -57,6 +57,11 @@ INSTALLED_APPS = [
     'corsheaders',
     # celery异步服务
     'celery',
+    # FastDFS　缓存文件
+    'fdfs_client',
+    'ckeditor',  # 富文本编辑器
+    'ckeditor_uploader',  # 富文本编辑器上传图片模块
+    'django_crontab',  # 定时生成首页静态页面
 
     # 注册子应用
     # 用户
@@ -67,6 +72,13 @@ INSTALLED_APPS = [
     'oauths.apps.OauthsConfig',
     # 区域划分
     'areas.apps.AreasConfig',
+    # 商品详情
+    'goods.apps.GoodsConfig',
+    # 广告
+    'contents.apps.ContentsConfig',
+    # 购物车
+    'carts.apps.CartsConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -87,7 +99,7 @@ ROOT_URLCONF = 'meiduo_mall.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -154,6 +166,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CACHES = {
+    # 用于缓存常用但不会经常改变的数据，如：行政区划，热销商品
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/0",
@@ -169,9 +182,18 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    # 缓存图片验证码 image_code 和 短信验证码 sms_code
     "verify_codes": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    # 缓存用户登陆后的购物车信息
+    "cart": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/3",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -252,7 +274,9 @@ CORS_ORIGIN_WHITELIST = (
     'www.meiduo.site:8080',
     'api.meiduo.site:8000'
 )
-CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+# 在未登录的情况下购物车信息会保存到cookie中，然后传递到后端，需要配置该项来允许携带cookie
+CORS_ALLOW_CREDENTIALS = True
 
 # QQ登陆相关配置
 QQ_APP_ID  = "101486400"
@@ -278,3 +302,30 @@ REST_FRAMEWORK_EXTENSIONS = {
     # 缓存存储
     'DEFAULT_USE_CACHE': 'default',
 }
+
+# FastDFS
+# django文件存储
+DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FasfDFSStorage'
+# 配置信息
+FDFS_URL = 'http://45.40.194.111:8888/'  # 访问图片的路径域名 ip地址修改为自己机器的ip地址
+FDFS_CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')
+
+# 富文本编辑器ckeditor配置
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',  # 工具条功能
+        'height': 300,  # 编辑器高度
+        # 'width': 300,  # 编辑器宽
+    },
+}
+CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所以此处设为''
+
+# 页面静态化# 生成的静态html文件保存目录
+GENERATED_STATIC_HTML_FILES_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc')
+# 定时任务
+CRONJOBS = [
+    # 每5分钟执行一次生成主页静态文件
+    ('*/5 * * * *', 'contents.crons.generate_static_index_html', '>> /home/python/Desktop/Python/meiduo_mall/meiduo_mall/logs/crontab.log')
+]
+# 解决crontab中文问题
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'

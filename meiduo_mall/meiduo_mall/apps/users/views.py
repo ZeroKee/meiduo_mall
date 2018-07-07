@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.views import ObtainJSONWebToken
 
 from .serializers import UserSerializer, CheckSMSCodeSerializer, CheckPasswordTokenSerializer, UserDetailSerializer, \
     EmailSerializer, CheckPasswordSerializer, AddressSerializer, AddressesTitleSerializer
@@ -14,6 +15,7 @@ from verifications.serializers import ImageCodeSerializer
 from .utils import get_user_by_account
 from .models import User, Address
 from . import constants
+from carts.utils import merge_cart_cookie_to_redis
 
 
 # 用户名唯一认证
@@ -206,6 +208,21 @@ class AddressViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+# 重写登陆视图，登陆自动合并购物车
+class UserAuthorizeView(ObtainJSONWebToken):
+    """重写jwt的登陆视图"""
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        # 获取当前用户
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # 以下是OJT.post()源码中拿user的语句
+            user = serializer.object.get('user') or request.user
+            # 合并购物车删除cookie中的cart
+            response = merge_cart_cookie_to_redis(request, user, response)
+        return response
 
 
 
