@@ -9,6 +9,7 @@ from rest_framework.generics import GenericAPIView
 from .models import OAuthQQUser
 from .exceptions import QQAPIError
 from .serializers import OAuthQQUserSerializer
+from carts.utils import merge_cart_cookie_to_redis
 
 
 # GET: /oauth/qq/authorization/?code=xxx
@@ -64,11 +65,13 @@ class QQUserOAuthView(GenericAPIView):
             payload = jwt_payload_handler(user)
             # 生成token
             token = jwt_encode_handler(payload)
-            return Response({
+            response = Response({
                 "user_id":user.id,
                 'token':token,
                 'username':user.username
             })
+            response = merge_cart_cookie_to_redis(request, user, response)
+            return response
 
     def post(self, request):
         """
@@ -88,8 +91,10 @@ class QQUserOAuthView(GenericAPIView):
         payload = jwt_payload_handler(user)
         # 生成token
         token = jwt_encode_handler(payload)
-        return Response({
+        response = Response({
             "user_id": user.id,
             'token': token,
             'username': user.username
         })
+        response = merge_cart_cookie_to_redis(request, user, response)
+        return response

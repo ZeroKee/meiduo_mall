@@ -38,7 +38,10 @@ class SmsCodeView(GenericAPIView):
     def get(self, request, mobile):
         # 验证图片验证码
         serializer = self.get_serializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            print(e)
 
         # 生成短信验证码
         sms_code = '%06d' % random.randint(0, 999999)

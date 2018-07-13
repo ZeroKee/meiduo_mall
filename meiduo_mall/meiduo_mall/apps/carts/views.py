@@ -83,15 +83,14 @@ class CartView(APIView):
 
         if user is not None and user.is_authenticated:
             redis_conn = get_redis_connection('cart')
-            pl = redis_conn.pipeline()
             # hgetall 获取所有域和值， hget获取指定域的值
-            redis_cart = pl.hgetall('cart_%s' % user.id)
+            redis_cart = redis_conn.hgetall('cart_%s' % user.id)
             # smembers 获取集合类的所有值，没有返回空集合
-            redis_selected = pl.smembers('cart_selected_%s' % user.id)
+            redis_selected = redis_conn.smembers('cart_selected_%s' % user.id)
 
             cart = {}
             for key, value in redis_cart.items():
-                cart[key] = {
+                cart[int(key)] = {
                     'count': int(value),
                     'selected': True if key in redis_selected else False
                 }
@@ -101,6 +100,7 @@ class CartView(APIView):
                 cart = pickle.loads(base64.b64decode(cart.encode()))
             else:
                 cart = {}
+
         # 获取要进行序列化操作的对象
         skus = SKU.objects.filter(id__in=cart.keys())
         for sku in skus:

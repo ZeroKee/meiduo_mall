@@ -47,6 +47,15 @@ class MobileCountView(APIView):
 class UserRegisterView(CreateAPIView):
     serializer_class = UserSerializer
 
+    def post(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        # 从序列化器中获取之前保存在视图属性request中的user,
+        # 注意：此处不要使用序列化器，因为上面的父类中的create已经执行了序列化器并重新设置数据了。
+        user = request.myuser
+        if user is not None:
+            response = merge_cart_cookie_to_redis(request, user, response)
+        return response
+
 
 # 验证账号是否存在，并获取access_token
 # GET: /accounts/(?P<account>\w{5,20})/sms/token

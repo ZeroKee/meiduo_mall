@@ -35,6 +35,7 @@ var vm = new Vue({
         var code = this.get_query_string('code');
         axios.get(this.host + '/oauth/qq/user/?code=' + code, {
             responseType: 'json',
+            withCredentials: true
         }).then(response => {
             this.access_token = response.data.access_token;
             if (this.access_token) {

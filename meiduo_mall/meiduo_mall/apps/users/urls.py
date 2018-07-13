@@ -9,7 +9,7 @@ from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
     url(r'^username/(?P<username>\w{5,20})/count/$', views.UserNameCountView.as_view()),
-    url(r'^mobile/(?P<mobile>11[3-9]\d{9})/count/$', views.MobileCountView.as_view()),
+    url(r'^mobile/(?P<mobile>1[3-9]\d{9})/count/$', views.MobileCountView.as_view()),
     url(r'^users/$', views.UserRegisterView.as_view()),
     url(r'^authorizations/$', views.UserAuthorizeView.as_view(), name='authorizations'),
     url(r'^accounts/(?P<account>\w{5,20})/sms/token/$', views.SMScodeTokenView.as_view()),  # 返回发送短信验证码所需的access_token

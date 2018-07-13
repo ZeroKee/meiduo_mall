@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from .models import GoodsChannel
 
+
 def get_categories():
     """
     获取商品分类菜单
@@ -25,22 +26,22 @@ def get_categories():
     """
     categories = OrderedDict()
     # 拿到所有的频道，并按组和组内顺序来排名
-    channels = GoodsChannel.objects.order_by('group_id','sequence')
+    channels = GoodsChannel.objects.order_by('group_id', 'sequence')
     for channel in channels:
         group_id = channel.group_id
 
         # 如果当前组还没有构建表结构，就构建一下表结构
         if group_id not in categories.keys():
-            categories[group_id] = {'channels':[], 'sub_cats':[]}
+            categories[group_id] = {'channels': [], 'sub_cats': []}
 
         # 当前频道的类别
         cat1 = channel.category
 
         # 有表结构就直接将对应的数据放到categories中
         categories[group_id]['channels'].append({
-            'id':cat1.id,
-            'name':cat1.name,
-            'url':channel.url
+            'id': cat1.id,
+            'name': cat1.name,
+            'url': channel.url
         })
 
         # 通过自关联拿到当前频道的所有分类的分类
@@ -50,4 +51,4 @@ def get_categories():
                 cat2.sub_cats.append(cat3)  # 三级分类列表
             categories[group_id]['sub_cats'].append(cat2)
 
-        return categories
+    return categories

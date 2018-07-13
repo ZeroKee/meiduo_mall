@@ -159,7 +159,9 @@ var vm = new Vue({
 					'password2':this.password2,
 					'sms_code':this.sms_code,
 					'allow':this.allow.toString()
-				})
+					},
+					{responseType:'json',
+					withCredentials: true})
 					.then(response=>{
 						// 登陆状态保持
 						localStorage.clear();
@@ -185,7 +187,6 @@ var vm = new Vue({
 			if (this.sending_flag==true){
 				return;
 			}
-			this.sending_flag = true;
 			// 校验验证码和手机号是否为空
 			this.check_image_code();
 			this.check_phone();
@@ -195,7 +196,7 @@ var vm = new Vue({
 				return;
 			}
 			// 发送请求
-			axios.get(this.host + '/sms_code/'+ this.mobile + '/',
+			axios.get(this.host + '/sms_code/' + this.mobile + "/",
 				{
 					params:{  // 查询参数，也可以写在地址中
 						image_code:this.image_code,
@@ -236,7 +237,9 @@ var vm = new Vue({
 					}
 					this.sending_flag = false;  // 维护发送状态
 				})
+			this.sending_flag = true;
         }
+
 
 	}
 });

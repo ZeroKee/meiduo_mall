@@ -6,6 +6,7 @@ from django_redis import get_redis_connection
 
 import pickle, base64
 
+
 def merge_cart_cookie_to_redis(request, user, response):
     """
     登陆合并cookie中的数据到redis中
@@ -30,7 +31,7 @@ def merge_cart_cookie_to_redis(request, user, response):
         for sku_id, count in redis_cart.items():
             cart[int(sku_id)] = int(count)
 
-        for sku_id, count_selected_dict in cookie_cart:
+        for sku_id, count_selected_dict in cookie_cart.items():
             cart[int(sku_id)] = count_selected_dict.get('count')
             if count_selected_dict.get('selected'):
                 redis_cart_selected.add(sku_id)

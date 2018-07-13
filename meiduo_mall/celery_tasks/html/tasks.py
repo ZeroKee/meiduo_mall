@@ -24,8 +24,6 @@ def generate_static_sku_detail_html(sku_id):
     # 获取当前sku的信息，对象和通过外键关联获取所有的图片
     sku = SKU.objects.get(id=sku_id)
     sku.images = sku.skuimage_set.all()  # 一对多查询子模型时的语法就是.all(),等同与objects.all()
-    print(sku.skuimage_set, '------.all的作用')
-    print(sku.images)
 
     # 面包屑导航信息中的频道
     goods = sku.goods

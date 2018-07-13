@@ -82,6 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
         # 生成token
         token = jwt_encode_handler(payload)
         user.token = token
+        self.context['request'].myuser = user  # 用于合并购物车
         return user
 
     class Meta:
