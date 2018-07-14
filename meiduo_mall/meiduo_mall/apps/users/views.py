@@ -173,7 +173,7 @@ class AddressViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         # 判断地址是否已经达到上线　最多20个
         count = request.user.addresses.count()
-        if count > constants.USER_ADDRESSES_COUNT:
+        if count > constants.USER_ADDRESS_COUNTS_LIMIT:
             return Response({'message': '用户地址已达上限'}, status=status.HTTP_400_BAD_REQUEST)
         return super().create(request, *args, **kwargs)
 
@@ -183,7 +183,15 @@ class AddressViewSet(ModelViewSet):
 
     # GET: /addresses/ 获取所有地址
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        query_set = self.get_queryset()
+        serializer = self.get_serializer(query_set, many=True)
+        user = request.user
+        return Response({
+            'user_id': user.id,
+            'default_address_id': user.default_address_id,
+            'limit': constants.USER_ADDRESS_COUNTS_LIMIT,
+            'addresses': serializer.data
+        })
 
     # DELETE: /addresses/(?P<pk>\d+)/ 逻辑删除地址
     def destroy(self, request, *args, **kwargs):
@@ -200,7 +208,7 @@ class AddressViewSet(ModelViewSet):
         user = request.user
         user.default_address = address
         user.save()
-        return Response({'message':'设置默认地址成功'}, status=status.HTTP_200_OK)
+        return Response({'message': '设置默认地址成功'}, status=status.HTTP_200_OK)
 
     # GET: /addresses/(?P<pk>\d+)/show/  返回标题信息
     # @action(methods=['get'], detail=True)
@@ -222,6 +230,7 @@ class AddressViewSet(ModelViewSet):
 # 重写登陆视图，登陆自动合并购物车
 class UserAuthorizeView(ObtainJSONWebToken):
     """重写jwt的登陆视图"""
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         # 获取当前用户
@@ -232,7 +241,3 @@ class UserAuthorizeView(ObtainJSONWebToken):
             # 合并购物车删除cookie中的cart
             response = merge_cart_cookie_to_redis(request, user, response)
         return response
-
-
-
-

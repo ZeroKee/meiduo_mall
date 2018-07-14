@@ -78,7 +78,10 @@ INSTALLED_APPS = [
     'contents.apps.ContentsConfig',
     # 购物车
     'carts.apps.CartsConfig',
-
+    # 订单
+    "orders.apps.OrdersConfig",
+    # 支付Alipay
+    "payment.apps.PaymentConfig"
 ]
 
 MIDDLEWARE = [
@@ -329,3 +332,8 @@ CRONJOBS = [
 ]
 # 解决crontab中文问题
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
+
+# 支付宝
+ALIPAY_APPID = "2016091900545455"
+ALIPAY_URL = "https://openapi.alipaydev.com/gateway.do"
+ALIPAY_DEBUG = True

@@ -11,17 +11,17 @@ class Migration(migrations.Migration):
         ('goods', '0002_auto_20180706_0810'),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='goodsspecification',
-            name='desc_detail',
-        ),
-        migrations.RemoveField(
-            model_name='goodsspecification',
-            name='desc_pack',
-        ),
-        migrations.RemoveField(
-            model_name='goodsspecification',
-            name='desc_service',
-        ),
-    ]
+    # operations = [
+    #     migrations.RemoveField(
+    #         model_name='goodsspecification',
+    #         name='desc_detail',
+    #     ),
+    #     migrations.RemoveField(
+    #         model_name='goodsspecification',
+    #         name='desc_pack',
+    #     ),
+    #     migrations.RemoveField(
+    #         model_name='goodsspecification',
+    #         name='desc_service',
+    #     ),
+    # ]
